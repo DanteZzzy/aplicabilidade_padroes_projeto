@@ -6,14 +6,13 @@
 
     <meta charset="UTF-8">
 
-    <title>
-        Agendamento
-    </title>
+    <title>Agendamento</title>
 
-    <link
-        rel="stylesheet"
-        href="{% static 'agendamentos/style.css' %}"
-    >
+    <link rel="stylesheet" href="{% static 'agendamentos/style.css' %}">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
 </head>
 
@@ -21,251 +20,140 @@
 
 <div class="container">
 
-    <h2 class="title_agendamentos">
-        Agendar Serviço
-    </h2>
+    <!-- ── Cabeçalho ── -->
+    <header class="page-header">
+        <h2>Agendar Serviço</h2>
+        <p>Barbearia — escolha seus serviços abaixo</p>
+    </header>
 
     <form method="POST">
 
         {% csrf_token %}
 
-        <input
-            class="dados"
-            type="text"
-            name="cliente"
-            placeholder="Nome do cliente"
-            required
-        >
-
-        <h3 class="title_agendamentos">
-            Escolha um corte
-        </h3>
-
-        <label>
-
+        <!-- ── Seção: Cliente ── -->
+        <div class="form-section">
+            <div class="section-label">Cliente</div>
             <input
-                type="radio"
-                name="corte"
-                value=""
-                checked
+                class="dados"
+                type="text"
+                name="cliente"
+                placeholder="Nome do cliente"
+                required
             >
+        </div>
 
-            Nenhum corte
+        <!-- ── Seção: Corte ── -->
+        <div class="form-section">
+            <div class="section-label">Corte</div>
+            <div class="radio-group">
 
-        </label>
+                <label>
+                    <input type="radio" name="corte" value="" checked>
+                    Nenhum corte
+                </label>
 
-        <br>
+                {% for s in servicos_corte %}
+                    <label>
+                        <input type="radio" name="corte" value="{{ s.id }}">
+                        {{ s.nome }} — R$ {{ s.preco|floatformat:2 }}
+                    </label>
+                {% endfor %}
 
-        {% for s in servicos_corte %}
+            </div>
+        </div>
 
-            <label>
+        <!-- ── Seção: Barba ── -->
+        <div class="form-section">
+            <div class="section-label">Barba</div>
+            <div class="radio-group">
 
-                <input
-                    type="radio"
-                    name="corte"
-                    value="{{ s.id }}"
-                >
+                <label>
+                    <input type="radio" name="barba" value="" checked>
+                    Nenhuma barba
+                </label>
 
-                {{ s.nome }}
-                - R$ {{ s.preco|floatformat:2 }}
+                {% for s in servicos_barba %}
+                    <label>
+                        <input type="radio" name="barba" value="{{ s.id }}">
+                        {{ s.nome }} — R$ {{ s.preco|floatformat:2 }}
+                    </label>
+                {% endfor %}
 
-            </label>
+            </div>
+        </div>
 
-            <br>
-
-        {% endfor %}
-
-        <br>
-
-        <h3 class="title_agendamentos">
-            Escolha uma barba
-        </h3>
-
-        <label>
-
-            <input
-                type="radio"
-                name="barba"
-                value=""
-                checked
-            >
-
-            Nenhuma barba
-
-        </label>
-
-        <br>
-
-        {% for s in servicos_barba %}
-
-            <label>
-
-                <input
-                    type="radio"
-                    name="barba"
-                    value="{{ s.id }}"
-                >
-
-                {{ s.nome }}
-                - R$ {{ s.preco|floatformat:2 }}
-
-            </label>
-
-            <br>
-
-        {% endfor %}
-
-        <br>
-
-        <select
-            class="dados"
-            name="pagamento"
-            required
-        >
-
-            <option
-                value=""
-                disabled
-                selected
-            >
-                Forma de pagamento
-            </option>
-
-            <option value="pix">
-                Pix (10% desconto)
-            </option>
-
-            <option value="cartao">
-                Cartão (5% taxa)
-            </option>
-
-        </select>
-
-        <button type="submit">
-            Agendar
-        </button>
+        <!-- ── Seção: Pagamento + Botão ── -->
+        <div class="form-section">
+            <div class="section-label">Pagamento</div>
+            <select class="dados" name="pagamento" required>
+                <option value="" disabled selected>Forma de pagamento</option>
+                <option value="pix">Pix (10% desconto)</option>
+                <option value="cartao">Cartão (5% taxa)</option>
+            </select>
+            <br><br>
+            <button type="submit">Agendar</button>
+        </div>
 
     </form>
 
-    {% if mensagem %}
+    <!-- ── Mensagens de retorno ── -->
+    {% if mensagem or pagamento_msg or erro %}
+        <div class="mensagem-area">
 
-        <p class="mensagem">
+            {% if mensagem %}
+                <p class="mensagem"><strong>{{ mensagem }}</strong></p>
+            {% endif %}
 
-            <strong>
-                {{ mensagem }}
-            </strong>
+            {% if pagamento_msg %}
+                <p class="mensagem"><strong>{{ pagamento_msg }}</strong></p>
+            {% endif %}
 
-        </p>
+            {% if erro %}
+                <p class="erro"><strong>{{ erro }}</strong></p>
+            {% endif %}
 
+        </div>
     {% endif %}
 
-    {% if pagamento_msg %}
+    <!-- ── Seção: Histórico de agendamentos ── -->
+    <section class="table-section">
 
-        <p class="mensagem">
+        <div class="table-section-header">Agendamentos Realizados</div>
 
-            <strong>
-                {{ pagamento_msg }}
-            </strong>
+        <table id="table_agendamentos">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Serviços</th>
+                    <th>Valor Total</th>
+                    <th>Pagamento</th>
+                    <th>Data</th>
+                </tr>
+            </thead>
+            <tbody>
 
-        </p>
+            {% for ag in agendamentos %}
+                <tr>
+                    <td>{{ ag.cliente }}</td>
+                    <td>
+                        {% for servico in ag.servicos.all %}
+                            {{ servico.nome }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </td>
+                    <td>R$ {{ ag.valor_total|floatformat:2 }}</td>
+                    <td>{{ ag.get_pagamento_display }}</td>
+                    <td>{{ ag.data|date:"d/m/Y - H:i" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">Nenhum agendamento ainda</td>
+                </tr>
+            {% endfor %}
 
-    {% endif %}
+            </tbody>
+        </table>
 
-    {% if erro %}
-
-        <p class="erro">
-
-            <strong>
-                {{ erro }}
-            </strong>
-
-        </p>
-
-    {% endif %}
-
-    <hr>
-
-    <h3 class="title_agendamentos">
-        Agendamentos Realizados
-    </h3>
-
-    <table id="table_agendamentos">
-
-        <thead>
-
-            <tr>
-
-                <th>Cliente</th>
-                <th>Serviços</th>
-                <th>Valor Total</th>
-                <th>Pagamento</th>
-                <th>Data</th>
-
-            </tr>
-
-        </thead>
-
-        <tbody>
-
-        {% for ag in agendamentos %}
-
-            <tr>
-
-                <td>
-                    {{ ag.cliente }}
-                </td>
-
-                <td>
-
-                    {% for servico in ag.servicos.all %}
-
-                        {{ servico.nome }}
-
-                        {% if not forloop.last %}
-                            ,
-                        {% endif %}
-
-                    {% endfor %}
-
-                </td>
-
-                <td>
-
-                    R$ {{ ag.valor_total|floatformat:2 }}
-
-                </td>
-
-                <td>
-
-                    {{ ag.get_pagamento_display }}
-
-                </td>
-
-                <td>
-
-                    {{ ag.data|date:"d/m/Y - H:i" }}
-
-                </td>
-
-            </tr>
-
-        {% empty %}
-
-            <tr>
-
-                <td colspan="5">
-
-                    Nenhum agendamento ainda
-
-                </td>
-
-            </tr>
-
-        {% endfor %}
-
-        </tbody>
-
-    </table>
+    </section>
 
 </div>
 
