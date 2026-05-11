@@ -25,7 +25,6 @@ def criar_agendamento(request):
 
         metodo_pagamento = request.POST.get("pagamento")
 
-        # Junta os serviços escolhidos
         servicos_ids = []
 
         if corte_id:
@@ -35,17 +34,19 @@ def criar_agendamento(request):
             servicos_ids.append(barba_id)
 
         # VALIDAÇÕES
+        erros = []
+
         if not cliente or cliente.strip() == "":
+            erros.append("Digite o nome do cliente.")
 
-            erro = "Digite o nome do cliente."
+        if not servicos_ids:
+            erros.append("Selecione ao menos um serviço.")
 
-        elif not servicos_ids:
+        if not metodo_pagamento:
+            erros.append("Selecione uma forma de pagamento.")
 
-            erro = "Selecione ao menos um serviço."
-
-        elif not metodo_pagamento:
-
-            erro = "Selecione uma forma de pagamento."
+        if erros:
+            erro = " | ".join(erros)
 
         else:
 

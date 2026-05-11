@@ -4,43 +4,23 @@ from agendamentos.models import Servico
 class ServiceFactory:
 
     @staticmethod
+    def criar(tipo, nome, preco):
+        return Servico.objects.get_or_create(
+            nome=nome,
+            defaults={"tipo": tipo, "preco": preco}
+        )[0]
+
+    @staticmethod
+    def criar_corte(nome, preco):
+        return ServiceFactory.criar("corte", nome, preco)
+
+    @staticmethod
+    def criar_barba(nome, preco):
+        return ServiceFactory.criar("barba", nome, preco)
+
+    @staticmethod
     def criar_servicos_padrao():
-
-        servicos = [
-
-            {
-                "nome": "Corte Social",
-                "tipo": "corte",
-                "preco": 25
-            },
-
-            {
-                "nome": "Corte Degradê",
-                "tipo": "corte",
-                "preco": 30
-            },
-
-            {
-                "nome": "Barba",
-                "tipo": "barba",
-                "preco": 20
-            },
-
-            {
-                "nome": "Barba (com toalha quente)",
-                "tipo": "barba",
-                "preco": 25
-            }
-        ]
-
-        for servico in servicos:
-
-            Servico.objects.get_or_create(
-
-                nome=servico["nome"],
-
-                defaults={
-                    "tipo": servico["tipo"],
-                    "preco": servico["preco"]
-                }
-            )
+        ServiceFactory.criar_corte("Corte Social", 25)
+        ServiceFactory.criar_corte("Corte Degradê", 30)
+        ServiceFactory.criar_barba("Barba", 20)
+        ServiceFactory.criar_barba("Barba (com toalha quente)", 25)
