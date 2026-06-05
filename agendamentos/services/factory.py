@@ -1,26 +1,51 @@
+from abc import ABC, abstractmethod
 from agendamentos.models import Servico
+
+
+class ServicoFactory(ABC):
+
+    @abstractmethod
+    def criar(self, nome, preco):
+        pass
+
+
+class CorteFactory(ServicoFactory):
+
+    def criar(self, nome, preco):
+        return Servico.objects.get_or_create(
+            nome=nome,
+            defaults={"tipo": "corte", "preco": preco}
+        )[0]
+
+
+class BarbaFactory(ServicoFactory):
+
+    def criar(self, nome, preco):
+        return Servico.objects.get_or_create(
+            nome=nome,
+            defaults={"tipo": "barba", "preco": preco}
+        )[0]
 
 
 class ServiceFactory:
 
+    FACTORIES = {
+        "corte": CorteFactory,
+        "barba": BarbaFactory,
+    }
+
     @staticmethod
     def criar(tipo, nome, preco):
-        return Servico.objects.get_or_create(
-            nome=nome,
-            defaults={"tipo": tipo, "preco": preco}
-        )[0]
+        factory_class = ServiceFactory.FACTORIES.get(tipo)
 
-    @staticmethod
-    def criar_corte(nome, preco):
-        return ServiceFactory.criar("corte", nome, preco)
+        if not factory_class:
+            raise ValueError(f"Tipo de serviço inválido: {tipo}")
 
-    @staticmethod
-    def criar_barba(nome, preco):
-        return ServiceFactory.criar("barba", nome, preco)
+        return factory_class().criar(nome, preco)
 
     @staticmethod
     def criar_servicos_padrao():
-        ServiceFactory.criar_corte("Corte Social", 25)
-        ServiceFactory.criar_corte("Corte Degradê", 30)
-        ServiceFactory.criar_barba("Barba", 20)
-        ServiceFactory.criar_barba("Barba (com toalha quente)", 25)
+        ServiceFactory.criar("corte", "Corte Social", 25)
+        ServiceFactory.criar("corte", "Corte Degradê", 30)
+        ServiceFactory.criar("barba", "Barba", 20)
+        ServiceFactory.criar("barba", "Barba (com toalha quente)", 25)

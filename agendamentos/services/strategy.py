@@ -1,10 +1,12 @@
 from decimal import Decimal
+from abc import ABC, abstractmethod
 
 
-class PaymentStrategy:
+class PaymentStrategy(ABC):
 
+    @abstractmethod
     def pagar(self, valor):
-        raise NotImplementedError
+        pass
 
 
 class PixPayment(PaymentStrategy):
