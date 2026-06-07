@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+
+  agendamentos:
+    build: ./servico_agendamentos
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./servico_agendamentos:/app
+    depends_on:
+      - pagamentos
+      - notificacoes
+    command: python manage.py runserver 0.0.0.0:8000
+
+  pagamentos:
+    build: ./servico_pagamentos
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./servico_pagamentos:/app
+    command: python manage.py runserver 0.0.0.0:8001
+
+  notificacoes:
+    build: ./servico_notificacoes
+    ports:
+      - "8002:8002"
+    volumes:
+      - ./servico_notificacoes:/app
+    command: python manage.py runserver 0.0.0.0:8002

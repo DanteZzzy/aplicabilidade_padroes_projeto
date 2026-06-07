@@ -1,0 +1,148 @@
+{% load static %}
+
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Agendamento</title>
+    <link rel="stylesheet" href="{% static 'agendamentos/style.css' %}">
+    <link rel="icon" type="image/x-icon" href="{% static 'agendamentos/favicon.ico' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'agendamentos/favicon-32x32.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+<div class="container">
+
+    <header class="page-header">
+        <h2>Agendar Serviço</h2>
+        <p>Barbearia — Monte seu agendamento abaixo</p>
+    </header>
+
+    <form method="POST" id="form-agendamento">
+
+        {% csrf_token %}
+
+        <div class="form-section">
+            <div class="section-label">Cliente</div>
+            <input
+                class="dados"
+                type="text"
+                name="cliente"
+                placeholder="Nome do cliente"
+                required
+            >
+        </div>
+
+        <div class="form-section">
+            <div class="section-label">Escolha o Corte</div>
+            <select class="dados" name="corte">
+                <option value="" selected>Nenhum (Apenas Barba)</option>
+                {% for servico in servicos_corte %}
+                    <option value="{{ servico.id }}">{{ servico.nome }} — R$ {{ servico.preco }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-section">
+            <div class="section-label">Escolha a Barba</div>
+            <select class="dados" name="barba">
+                <option value="" selected>Nenhum (Apenas Corte)</option>
+                {% for servico in servicos_barba %}
+                    <option value="{{ servico.id }}">{{ servico.nome }} — R$ {{ servico.preco }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-section">
+            <div class="section-label">Data e Horário Pretendido</div>
+            <input class="dados" type="datetime-local" id="data_hora" name="data_agendada" min="{% now 'Y-m-d\TH:i' %}" required>
+        </div>
+
+        <div class="form-section">
+            <div class="section-label">Pagamento</div>
+            <select class="dados" name="pagamento" required>
+                <option value="" disabled selected>Forma de pagamento</option>
+                <option value="pix">Pix</option>
+                <option value="cartao">Cartão</option>
+            </select>
+            <br><br>
+            <button type="submit">Confirmar Agendamento</button>
+        </div>
+
+    </form>
+
+    {% if messages %}
+        <div class="mensagem-area">
+            {% for message in messages %}
+                {% if 'error' in message.tags %}
+                    <p class="erro"><strong>{{ message }}</strong></p>
+                {% else %}
+                    <p class="mensagem"><strong>{{ message }}</strong></p>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <section class="table-section">
+
+        <div class="table-section-header">Agendamentos Realizados</div>
+
+        <table id="table_agendamentos">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Data Agendada</th>
+                    <th>Serviços Escolhidos</th>
+                    <th>Pagamento</th>
+                    <th>Valor Total</th>
+                    <th>Efetuado em</th>
+                </tr>
+            </thead>
+            <tbody>
+
+            {% for ag in agendamentos %}
+                <tr>
+                    <td>{{ ag.cliente }}</td>
+                    <td>{{ ag.data_hora|date:"d/m/Y - H:i" }}</td>
+                    <td>
+                        {% for servico in ag.servicos.all %}
+                            {{ servico.nome }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            Nenhum serviço
+                        {% endfor %}
+                    </td>
+                    <td style="text-transform: uppercase;">{{ ag.pagamento }}</td>
+                    <td>R$ {{ ag.valor_total }}</td>
+                    <td>{{ ag.data_criacao|date:"d/m/Y - H:i" }}</td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center;">Nenhum agendamento ainda</td>
+                </tr>
+            {% endfor %}
+
+            </tbody>
+        </table>
+
+    </section>
+
+</div>
+
+<script>
+    document.getElementById("form-agendamento").addEventListener("submit", function(e) {
+        const corte = document.querySelector("select[name='corte']").value;
+        const barba = document.querySelector("select[name='barba']").value;
+
+        if (!corte && !barba) {
+            e.preventDefault();
+            alert("Selecione ao menos um serviço: Corte ou Barba.");
+        }
+    });
+</script>
+
+</body>
+</html>
