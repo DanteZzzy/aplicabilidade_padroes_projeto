@@ -32,10 +32,14 @@ class CriarAgendamentoUseCase:
 
         # CHAMA MICROSSERVIÇO DE PAGAMENTO
         try:
-            resposta_pagamento = requests.post(self.PAGAMENTO_URL, json={
-                "metodo_pagamento": metodo_pagamento,
-                "valor": str(valor_total)
-            })
+            resposta_pagamento = requests.post(
+                self.PAGAMENTO_URL,
+                json={
+                    "metodo_pagamento": metodo_pagamento,
+                    "valor": str(valor_total)
+                },
+                timeout=60
+            )
             resultado_pagamento = resposta_pagamento.json()
         except Exception:
             return {"status": "erro", "mensagem": "Serviço de pagamento indisponível."}
@@ -53,12 +57,16 @@ class CriarAgendamentoUseCase:
 
         # CHAMA MICROSSERVIÇO DE NOTIFICAÇÃO
         try:
-            requests.post(self.NOTIFICACAO_URL, json={
-                "cliente": cliente,
-                "data_hora": str(data_agendada)
-            })
+            requests.post(
+                self.NOTIFICACAO_URL,
+                json={
+                    "cliente": cliente,
+                    "data_hora": str(data_agendada)
+                },
+                timeout=60
+            )
         except Exception:
-            pass  # Notificação não bloqueia o fluxo
+            pass
 
         return {
             "status": "sucesso",
