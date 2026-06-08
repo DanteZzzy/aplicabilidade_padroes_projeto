@@ -38,7 +38,7 @@ class CriarAgendamentoUseCase:
                     "metodo_pagamento": metodo_pagamento,
                     "valor": str(valor_total)
                 },
-                timeout=60
+                timeout=120
             )
             resultado_pagamento = resposta_pagamento.json()
         except Exception:
@@ -63,7 +63,7 @@ class CriarAgendamentoUseCase:
                     "cliente": cliente,
                     "data_hora": str(data_agendada)
                 },
-                timeout=60
+                timeout=120
             )
         except Exception:
             pass
