@@ -5,8 +5,8 @@ import requests
 
 class CriarAgendamentoUseCase:
 
-    PAGAMENTO_URL = "http://pagamentos:8001/pagamentos/processar/"
-    NOTIFICACAO_URL = "http://notificacoes:8002/notificacoes/notificar/"
+    PAGAMENTO_URL = "https://servico-pagamentos.onrender.com/pagamentos/processar/"
+    NOTIFICACAO_URL = "https://servico-notificacoes.onrender.com/notificacoes/notificar/"
 
     def __init__(self, repository):
         self.repository = repository

@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: servico-pagamentos
+    runtime: docker
+    dockerfilePath: ./servico_pagamentos/Dockerfile
+    dockerContext: ./servico_pagamentos
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: core.settings
+
+  - type: web
+    name: servico-notificacoes
+    runtime: docker
+    dockerfilePath: ./servico_notificacoes/Dockerfile
+    dockerContext: ./servico_notificacoes
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: core.settings
+
+  - type: web
+    name: servico-agendamentos
+    runtime: docker
+    dockerfilePath: ./servico_agendamentos/Dockerfile
+    dockerContext: ./servico_agendamentos
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: agendamento_system.settings
