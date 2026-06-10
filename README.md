@@ -1,14 +1,25 @@
 # 📅 Sistema de Agendamento — Barbearia
 
-Sistema web desenvolvido com Django para gerenciamento de agendamentos de serviços de uma barbearia, com suporte a diferentes métodos de pagamento e aplicação de padrões de projeto, arquitetura limpa, microsserviços e boas práticas de engenharia de software.
+## 📋 Descrição do Problema
+
+Barbearias tradicionais enfrentam dificuldades no gerenciamento de agendamentos: clientes ligam ou aparecem sem hora marcada, gerando filas, conflitos de horário e perda de clientes. A ausência de um sistema centralizado também dificulta o controle financeiro, já que diferentes formas de pagamento são aceitas sem registro adequado.
+
+**Proposta de solução:** um sistema web que permite ao cliente agendar seu horário online, escolher os serviços desejados (corte e/ou barba), selecionar a forma de pagamento e receber confirmação automática. O sistema valida conflitos de horário, calcula o valor final automaticamente e notifica o estabelecimento a cada novo agendamento — tudo isso distribuído em microsserviços independentes, garantindo escalabilidade e manutenibilidade.
 
 ---
 
 ## 🔗 Acesso ao sistema
 
-> https://servico-agendamentos.onrender.com
+> **https://servico-agendamentos.onrender.com**
 
-⚠️ O sistema está hospedado no plano gratuito do Render. Na primeira requisição após um período de inatividade, os serviços podem demorar até 60 segundos para responder (spin down). Aguarde e tente novamente caso ocorra erro de pagamento indisponível.
+⚠️ **Atenção — plano gratuito do Render (spin down):**
+O sistema está hospedado gratuitamente. Após 15 minutos de inatividade, cada serviço "dorme" e precisa ser acordado manualmente. Caso apareça a mensagem **"Serviço de pagamento indisponível"**, siga os passos abaixo:
+
+**1.** Acesse os links abaixo em abas separadas do navegador para acordar os serviços (vai aparecer uma mensagem de erro de método — isso é normal):
+- https://servico-pagamentos.onrender.com/pagamentos/processar/
+- https://servico-notificacoes.onrender.com/notificacoes/notificar/
+
+**2.** Aguarde alguns segundos e tente realizar o agendamento novamente.
 
 ---
 
@@ -21,6 +32,7 @@ Sistema web desenvolvido com Django para gerenciamento de agendamentos de servi�
 - Gunicorn
 - Whitenoise
 - Behave (BDD)
+- Pytest / Django Test (TDD)
 - Requests
 - Render (deploy)
 
@@ -62,7 +74,13 @@ agendamentos/
 ## 🧠 Padrões de Projeto Utilizados
 
 ### 🏗️ Facade
-Centraliza a lógica de criação de agendamentos no `CriarAgendamentoUseCase`, escondendo a complexidade do processo atrás de uma única chamada. A `views.py` não conhece os detalhes de pagamento, notificação ou persistência.
+O `CriarAgendamentoUseCase` centraliza toda a lógica de criação de agendamentos, escondendo a complexidade do processo atrás de uma única chamada. A `views.py` não conhece os detalhes de pagamento, notificação ou persistência — apenas chama o use case e recebe o resultado.
+
+Responsável por:
+- Validar regras de negócio (data no passado, horário duplicado, serviço obrigatório)
+- Chamar o microsserviço de pagamento
+- Persistir o agendamento via repositório
+- Chamar o microsserviço de notificação
 
 ### 🏭 Factory
 Centraliza a criação dos serviços disponíveis na barbearia em `infrastructure/factory.py`. Usa classes especializadas `CorteFactory` e `BarbaFactory` que herdam de `ServicoFactory` (ABC). Para adicionar um novo tipo de serviço, basta criar uma nova classe e registrá-la no dicionário `FACTORIES` — sem modificar a lógica existente (Open/Closed).
@@ -109,6 +127,36 @@ docker-compose exec pagamentos python manage.py test pagamentos
 docker-compose exec notificacoes python manage.py test notificacoes
 ```
 
+### Resultado da execução:
+
+```bash
+Found 10 test(s).
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+..........
+Ran 10 tests in 0.035s
+OK
+Destroying test database for alias 'default'...
+Found 8 test(s).
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+........
+Ran 8 tests in 0.023s
+OK
+Destroying test database for alias 'default'...
+Found 6 test(s).
+Creating test database for alias 'default'...
+System check identified no issues (0 silenced).
+.[EMAIL] Enviado para Gabriel
+[LOG] Agendamento criado para Gabriel em 2026-06-10 10:00
+.[EMAIL] Enviado para Gabriel
+.[LOG] Agendamento criado para Gabriel em 2026-06-10 10:00
+...
+Ran 6 tests in 0.018s
+OK
+Destroying test database for alias 'default'...
+```
+
 ### Cobertura:
 
 | Serviço | Testes | Casos cobertos |
@@ -128,6 +176,38 @@ Cenários escritos em português usando Behave.
 docker-compose exec agendamentos python -m behave features/
 docker-compose exec pagamentos python -m behave features/
 docker-compose exec notificacoes python -m behave features/
+```
+
+### Resultado da execução:
+```bash
+Funcionalidade: Agendamento de serviços na barbearia
+Cenário: Agendamento realizado com sucesso
+Dado que o cliente "Gabriel" quer agendar para daqui 24 horas
+E escolheu o serviço "Corte Social" por R$ 20.00
+E selecionou pagamento via "pix"
+Quando o agendamento for confirmado
+Então o resultado deve ser "sucesso"
+Cenário: Agendamento para data no passado
+Cenário: Agendamento sem serviço selecionado
+Cenário: Horário já reservado
+1 feature passed, 0 failed, 0 skipped
+4 scenarios passed, 0 failed, 0 skipped
+24 steps passed, 0 failed, 0 skipped
+
+Funcionalidade: Processamento de pagamentos
+Cenário: Pagamento via PIX realizado com sucesso
+Cenário: Pagamento via cartão realizado com sucesso
+Cenário: Método de pagamento inválido
+1 feature passed, 0 failed, 0 skipped
+3 scenarios passed, 0 failed, 0 skipped
+12 steps passed, 0 failed, 0 skipped
+
+Funcionalidade: Notificação de agendamentos
+Cenário: Notificação enviada com sucesso
+Cenário: Múltiplos observers recebem a notificação
+1 feature passed, 0 failed, 0 skipped
+2 scenarios passed, 0 failed, 0 skipped
+9 steps passed, 0 failed, 0 skipped
 ```
 
 ### Cobertura:
@@ -150,7 +230,6 @@ docker-compose up --build
 ```
 
 ### Acessar:
-
 http://localhost:8000
 
 ---
@@ -190,7 +269,6 @@ python manage.py runserver
 ```
 
 ### Acessar:
-
 http://127.0.0.1:8000
 http://127.0.0.1:8000/admin
 
@@ -215,10 +293,11 @@ python manage.py shell -c "from agendamentos.models import Servico; Servico.obje
 python manage.py flush
 ```
 
+> ⚠️ Atenção: esse comando apaga todos os dados cadastrados, incluindo serviços e agendamentos.
+
 ---
 
 ## 📁 Estrutura do Projeto
-
 ```bash
 agendamento_system/
 │
@@ -288,6 +367,9 @@ Plataforma gratuita com suporte a Docker, deploy automático via GitHub e HTTPS 
 
 ### Por que Behave para BDD?
 Permite escrever cenários em português, aproximando a documentação do negócio real e facilitando a compreensão por parte de não-desenvolvedores.
+
+### Por que Arquitetura Limpa?
+A separação em camadas (domain, use_cases, infrastructure) garante que as regras de negócio não dependam de frameworks ou banco de dados. O `CriarAgendamentoUseCase` pode ser testado sem Django, sem banco e sem HTTP.
 
 ---
 
